@@ -18,8 +18,7 @@ int main(int argc, char *argv[])
 	double start_t, end_t;
 	MPI_Status status;
 	char buff[10000];
-
-
+	
 	MPI_Init(&argc, &argv);
 
 	//create MPI datatype for struct
@@ -67,10 +66,11 @@ int main(int argc, char *argv[])
 	}
 	else //Reciever
 	{
+		char recv_buff[10000];
 		client_s rcvClient;
-		MPI_Recv(buff, 1000, MPI_PACKED, 0, 0, MPI_COMM_WORLD, &status);
-		MPI_Unpack(buff, 1000, &position, &rcvClient, 1, mpiCLientType, MPI_COMM_WORLD);
-		//printf("process %d received packed client from process 0\n", rank);
+		MPI_Recv(recv_buff, 10000, MPI_PACKED, 0, 0, MPI_COMM_WORLD, &status);
+		MPI_Unpack(recv_buff, 10000, &position, &rcvClient, 1, mpiCLientType, MPI_COMM_WORLD);
+		printf("Process number %d client name is %s\n",rank, rcvClient.name);
 	}
 	end_t = MPI_Wtime();
 

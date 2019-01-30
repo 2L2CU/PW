@@ -14,10 +14,11 @@ typedef struct //structure to pass between processors
 int main(int argc, char *argv[])
 {
 
-	int size, rank, i = 1;
+	int size, rank, i = 1, position;
 	int dest = 0, src = 0, tag = 1;
 	double start_t, end_t;
 	MPI_Status status;
+	char pack_buff[10000];
 
 	/*-----------------bsend variables and PACK_SIZE x messages Buffer size--------------------------*/
 
@@ -62,26 +63,30 @@ int main(int argc, char *argv[])
 	}
 	//-------------------------------------------------------------------------------------------------
 	start_t = MPI_Wtime();
-	if (rank == 0)
+	if (!rank)
 	{
-		printf("\nProcess 0\n");
+		position = 0;
+		//printf("\nProcess 0\n");
 		client_s clientToSend;
 		clientToSend.clientID = 1;
 		clientToSend.balance = 2940.25;
 		sprintf(clientToSend.name, "Borys");
 		sprintf(clientToSend.surname, "Szyc");
 
+		MPI_Pack(&clientToSend, 1, mpiCLientType, pack_buff, 1000, &position, MPI_COMM_WORLD);
 
 		while (i < size)
 		{
-			MPI_Bsend(&clientToSend, 1, mpiCLientType, i, 0, MPI_COMM_WORLD);
+			MPI_Bsend(pack_buff, position, MPI_PACKED, i, 0, MPI_COMM_WORLD);
 			i++;
 		}
 	}
 	else
 	{
+		char recv_buff[10000];
 		client_s rcvClient;
-		MPI_Recv(&rcvClient, 1, mpiCLientType, 0, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+		MPI_Recv(recv_buff, 10000, MPI_PACKED, 0, 0, MPI_COMM_WORLD, &status);
+		MPI_Unpack(recv_buff, 10000, &position, &rcvClient, 1, mpiCLientType, MPI_COMM_WORLD);
 		//printf("process %d received client from process 0 client name %s \n", rank, rcvClient.name);
 	}
 	end_t = MPI_Wtime();
